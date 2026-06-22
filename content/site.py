@@ -1,7 +1,7 @@
 # 사이트 공통 설정
 # 배포 도메인 확정 후 BASE_URL 을 실제 도메인으로 변경하세요.
 # URL은 메인도메인 루트 기준의 짧고 깔끔한 구조를 사용합니다(깊은 경로 중첩 없음).
-BASE_URL = "https://barogo-massage.com"
+BASE_URL = "https://bundang-massage1.pages.dev"
 
 BRAND = "바로 GO"
 BRAND_MARK = "Go"

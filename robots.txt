@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://barogo-massage.com/sitemap.xml
+Sitemap: https://bundang-massage1.pages.dev/sitemap.xml
