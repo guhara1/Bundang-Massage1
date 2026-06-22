@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <circle cx="256" cy="256" r="246" fill="#0b0e15"/>
+  <circle cx="256" cy="256" r="237" fill="none" stroke="#d4af6e" stroke-width="18"/>
+  <circle cx="256" cy="256" r="208" fill="none" stroke="#d4af6e" stroke-opacity="0.35" stroke-width="4"/>
+  <text x="256" y="262" text-anchor="middle" dominant-baseline="central"
+        font-family="'Noto Serif KR', serif" font-weight="900" font-size="216"
+        fill="#f1e2bc">Go</text>
+</svg>
