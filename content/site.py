@@ -8,6 +8,18 @@ BRAND_MARK = "Go"
 PHONE = "0508-202-4719"
 PHONE_DISPLAY = "0508-202-4719"
 
+# 검색엔진 사이트 소유확인 (메인페이지에만 출력)
+NAVER_SITE_VERIFICATION = "bb28abba20296d57e5e310b43ca484ec4c1bf043"
+GOOGLE_SITE_VERIFICATION = ""  # Search Console HTML 태그 발급 시 여기에 입력
+
+# IndexNow 키 — 빙·네이버 등 IndexNow 파트너에 즉시 색인 통보용.
+# 빌드 시 루트에 "<KEY>.txt" 파일로 함께 생성된다.
+INDEXNOW_KEY = "adc79067212d4643bc55655095c154207f0df9ba7ae342ef945142449b8daa06"
+
+# RSS 피드 메타
+SITE_TITLE = "바로 GO — 분당 출장마사지·홈타이 안내"
+SITE_DESC = "분당구 전지역 방문 출장마사지·홈타이 예약 안내. 정자·서현·야탑·판교·미금 생활권과 역세권을 확인하세요."
+
 # 푸터 오렌지 버튼 — 텔레그램 링크
 TELEGRAM_BUILD = "https://t.me/googleseolab"   # 웹사이트 제작문의
 TELEGRAM_PARTNER = "https://t.me/googleseolab"  # 제휴문의

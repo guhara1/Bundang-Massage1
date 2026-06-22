@@ -19,7 +19,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from content import PAGES
 from content.site import (BASE_URL, BRAND, BRAND_MARK, NAV, PHONE, PHONE_DISPLAY,
-                          TELEGRAM_BUILD, TELEGRAM_PARTNER)
+                          TELEGRAM_BUILD, TELEGRAM_PARTNER,
+                          NAVER_SITE_VERIFICATION, GOOGLE_SITE_VERIFICATION,
+                          INDEXNOW_KEY, SITE_TITLE, SITE_DESC)
+from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 MIN_INDEX_CHARS = 2000
@@ -205,6 +208,14 @@ def render_page(page: dict) -> str:
     canonical = SITE + "/" + path
     schema = render_schema(page, canonical)
 
+    # 사이트 소유확인 메타 — 메인페이지(루트)에만 출력
+    verify = ""
+    if path == "":
+        if NAVER_SITE_VERIFICATION:
+            verify += f'<meta name="naver-site-verification" content="{NAVER_SITE_VERIFICATION}">\n'
+        if GOOGLE_SITE_VERIFICATION:
+            verify += f'<meta name="google-site-verification" content="{GOOGLE_SITE_VERIFICATION}">\n'
+
     page_head = hero if hero else ""
     h1_html = "" if hero else f"<h1>{h1}</h1>"
 
@@ -220,7 +231,8 @@ def render_page(page: dict) -> str:
 <title>{title}</title>
 <meta name="description" content="{desc}">
 {robots}
-<link rel="canonical" href="{canonical}">
+{verify}<link rel="canonical" href="{canonical}">
+<link rel="alternate" type="application/rss+xml" title="{BRAND} 업데이트" href="{SITE}/rss.xml">
 <meta property="og:type" content="website">
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
@@ -335,6 +347,7 @@ def render_page(page: dict) -> str:
 def build() -> None:
     report = []
     sitemap_urls = []
+    rss_entries = []
     warnings = []
     seen = set()
 
@@ -358,10 +371,20 @@ def build() -> None:
         noindex = page.get("noindex", False) or chars < MIN_INDEX_CHARS
         if not noindex:
             sitemap_urls.append(SITE + "/" + path)
+            rss_entries.append((path, page["title"], page["desc"]))
         report.append((path or "/", chars, desc_len, "noindex" if noindex else "index"))
 
-    # sitemap.xml
-    urls = "\n".join(f"  <url><loc>{u}</loc></url>" for u in sitemap_urls)
+    now = datetime.now(timezone.utc)
+    lastmod = now.strftime("%Y-%m-%d")
+    rfc822 = now.strftime("%a, %d %b %Y %H:%M:%S +0000")
+
+    # sitemap.xml (lastmod 포함 — 색인 갱신 신호)
+    urls = "\n".join(
+        f"  <url><loc>{u}</loc><lastmod>{lastmod}</lastmod>"
+        f"<changefreq>weekly</changefreq>"
+        f"<priority>{'1.0' if u.rstrip('/') == SITE else '0.8'}</priority></url>"
+        for u in sitemap_urls
+    )
     with open(os.path.join(ROOT, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write(
             '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -369,9 +392,55 @@ def build() -> None:
             f"{urls}\n</urlset>\n"
         )
 
-    # robots.txt
+    # rss.xml (RSS 2.0 — 색인 발견 가속 + 네이버 서치어드바이저 피드)
+    items = []
+    for path, title, desc in rss_entries:
+        loc = SITE + "/" + path
+        items.append(
+            "    <item>\n"
+            f"      <title>{html.escape(title)}</title>\n"
+            f"      <link>{loc}</link>\n"
+            f"      <guid isPermaLink=\"true\">{loc}</guid>\n"
+            f"      <description>{html.escape(desc)}</description>\n"
+            f"      <pubDate>{rfc822}</pubDate>\n"
+            "    </item>"
+        )
+    rss_items = "\n".join(items)
+    with open(os.path.join(ROOT, "rss.xml"), "w", encoding="utf-8") as f:
+        f.write(
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n'
+            "  <channel>\n"
+            f"    <title>{html.escape(SITE_TITLE)}</title>\n"
+            f"    <link>{SITE}/</link>\n"
+            f'    <atom:link href="{SITE}/rss.xml" rel="self" type="application/rss+xml"/>\n'
+            f"    <description>{html.escape(SITE_DESC)}</description>\n"
+            "    <language>ko</language>\n"
+            f"    <lastBuildDate>{rfc822}</lastBuildDate>\n"
+            f"{rss_items}\n"
+            "  </channel>\n</rss>\n"
+        )
+
+    # robots.txt — 주요 봇 명시 허용 + sitemap/rss 안내
+    robots = [
+        "User-agent: *",
+        "Allow: /",
+        "",
+        "# 검색 로봇 명시 허용 (구글·빙·네이버·다음)",
+        "User-agent: Googlebot", "Allow: /",
+        "User-agent: Bingbot", "Allow: /",
+        "User-agent: Yeti", "Allow: /",          # 네이버
+        "User-agent: Daumoa", "Allow: /",        # 다음(카카오)
+        "",
+        f"Sitemap: {SITE}/sitemap.xml",
+        f"Sitemap: {SITE}/rss.xml",
+    ]
     with open(os.path.join(ROOT, "robots.txt"), "w", encoding="utf-8") as f:
-        f.write("User-agent: *\nAllow: /\n\n" f"Sitemap: {SITE}/sitemap.xml\n")
+        f.write("\n".join(robots) + "\n")
+
+    # IndexNow 키 파일 — https://<도메인>/<KEY>.txt 에서 접근 가능해야 함
+    with open(os.path.join(ROOT, f"{INDEXNOW_KEY}.txt"), "w", encoding="utf-8") as f:
+        f.write(INDEXNOW_KEY + "\n")
 
     open(os.path.join(ROOT, ".nojekyll"), "w").close()
 
